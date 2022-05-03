@@ -61,14 +61,14 @@ int loadObject(const char* filename)
 		else if(coord[i]->c_str()[0]=='f')
 		{
 			int a,b,c,d,e;
-			if(count(coord[i]->begin(), coord[i]->end(), ' ') == 3)
+			if(count(coord[i]->begin(), coord[i]->end(), ' ') == 3) // here it is triangles faces
 			{
 				sscanf(coord[i]->c_str(), "f %d//%d %d//%d %d//%d",&a,&b,&c,&b,&d,&b);
 				faces.push_back(new face(b,a,c,d));
 			}
 			else
 			{
-				sscanf(coord[i]->c_str(), "f %d//%d %d//%d %d//%d %d//%d",&a,&b,&c,&b,&d,&b,&e,&b);
+				sscanf(coord[i]->c_str(), "f %d//%d %d//%d %d//%d %d//%d",&a,&b,&c,&b,&d,&b,&e,&b);//quads faces
 				faces.push_back(new face(b,a,c,d,e));
 			}
 		}

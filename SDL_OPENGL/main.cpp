@@ -20,7 +20,7 @@ int cube;
 int monk;
 void Init(){
 
-	glClearColor(0.0,0.0,0.0,1.0);
+	glClearColor(0.5,0.5,0.5,1.0); //change background color into grey color to show the fog on mesh
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45,640/480,1.0,500.0);
@@ -28,7 +28,12 @@ void Init(){
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	
+	glEnable(GL_FOG);
+	glFogi(GL_FOG_MODE,GL_LINEAR);
+	glFogf(GL_FOG_START,1.0);
+	glFogf(GL_FOG_END,7.1);
+	float fogColor[]={0.5,0.5,0.5,1.0};
+	glFogfv(GL_FOG_COLOR,fogColor);
 
 	float dif[]={1.0,1.0,1.0,1.0};
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,dif);
@@ -47,11 +52,20 @@ void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
+	
 	float pos[]={-1.5,2.0,-2.0,1.0};
 	glLightfv(GL_LIGHT0,GL_POSITION,pos);
-	glTranslatef(0.0,0.0,-7.0);
-	glRotatef(angle,-1.0,-1.0,0.0);
-	glCallList(cube);
+	glPushMatrix();
+		glTranslatef(1.2,0.0,-7.0);
+		glRotatef(angle,-1.0,-1.0,0.0);
+		glCallList(monk);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(-1.0,0.0,-7.0);
+		glRotatef(angle,1.0,1.0,0.0);
+		glCallList(monk);
+	glPopMatrix();
 	
 	/*glBegin(GL_TRIANGLES);
 
