@@ -16,6 +16,7 @@ using namespace std;
 float angle=0.0;
 
 int cube;
+int monkmat;
 objloader obj;  //create an instance of the objloader
 void init()
 {
@@ -26,22 +27,26 @@ void init()
 	glMatrixMode(GL_MODELVIEW);
 	glEnable(GL_DEPTH_TEST);
 	cube=obj.load("cubemat.obj");  //load it
+	monkmat=obj.load("monkmat.obj"); 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	
-	float col[]={1.0,1.0,1.0,1.0};
-	glLightfv(GL_LIGHT0,GL_DIFFUSE,col);
+	float dif[]={1.0,1.0,1.0,1.0};
+	glLightfv(GL_LIGHT0,GL_DIFFUSE,dif);
+
+	/*float amb[]={0.1,0.1,0.1,1.0};
+	glLightfv(GL_LIGHT0,GL_AMBIENT,amb);*/
 }
 
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	float pos[]={-1.5,2.0,-2.0,1.0};
+	float pos[]={1.7,2.0,-2.0,1.0};
 	glLightfv(GL_LIGHT0,GL_POSITION,pos);
-	glTranslatef(-1.3,-1.3,-7.0);
+	glTranslatef(-0.7,-0.7,-5.0);
 	glRotatef(angle,-1.0,-1.0,-1.0);
-	glCallList(cube);   //and display it
+	glCallList(monkmat);   //and display it
 }
 
 

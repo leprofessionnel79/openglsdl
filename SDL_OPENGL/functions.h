@@ -53,9 +53,11 @@ class objloader{
 	std::vector<unsigned int> lists;    //the id for all lists (so we can delete the lists after use it)
 	std::vector<material*> materials;   //all materials
 	std::vector<texcoord*> texturecoordinate;   //all texture coorinate (UV coordinate)
-	bool ismaterial,isnormals,istexture;    //obvious
+	std::vector<coordinate*> vertexnormals;
+	bool ismaterial,isnormals,istexture,isvertexnormal;    //obvious
 	unsigned int loadTexture(const char* filename); //private load texture function
 	void clean();   //free all of the used memory
+	void smoothnormals();
 
 public:
 	objloader();    

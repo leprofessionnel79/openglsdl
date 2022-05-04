@@ -70,7 +70,7 @@ int objloader::load(const char* filename)
 	std::ifstream in(filename); //open the model file
 	if(!in.is_open())
 	{
-		std::cout << "Nor oepened" << std::endl; //if it's not opened then error message, and return with -1
+		std::cout << "Nor opened" << std::endl; //if it's not opened then error message, and return with -1
 		return -1;
 	}
 	char buf[256];  //temp buffer
@@ -105,14 +105,14 @@ int objloader::load(const char* filename)
 					sscanf(coord[i]->c_str(),"f %d//%d %d//%d %d//%d %d//%d",&a,&b,&c,&b,&d,&b,&e,&b);  //read in this form
 					faces.push_back(new face(b,a,c,d,e,0,0,0,0,curmat));    //and put to the faces, we don't care about the texture coorinate in this case
 					//and if there is no material, it doesn't matter, what is curmat
-				}else if(coord[i]->find("/")!=std::string::npos)    //if we have texture coorinate and normal vectors
+				}else if(coord[i]->find("/")!=std::string::npos)    //if we have texture coordinate and normal vectors
 				{
-					int t[4];   //texture coorinates
+					int t[4];   //texture coordinates
 					//read in this form, and put to the end of the vector
 					sscanf(coord[i]->c_str(),"f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",&a,&t[0],&b,&c,&t[1],&b,&d,&t[2],&b,&e,&t[3],&b);
 					faces.push_back(new face(b,a,c,d,e,t[0],t[1],t[2],t[3],curmat));
 				}else{
-					//else we don't have normal vectors nor texture coorinate
+					//else we don't have normal vectors nor texture coordinate
 					sscanf(coord[i]->c_str(),"f %d %d %d %d",&a,&b,&c,&d);
 					faces.push_back(new face(-1,a,b,c,d,0,0,0,0,curmat));       
 				}
@@ -152,7 +152,7 @@ int objloader::load(const char* filename)
 			std::ifstream mtlin(filen); //open the file
 			if(!mtlin.is_open())    //if not opened error message, clean all memory, return with -1
 			{
-				std::cout << "connot open the material file" << std::endl;
+				std::cout << "cannot open the material file" << std::endl;
 				clean();
 				return -1;
 			}
@@ -170,14 +170,14 @@ int objloader::load(const char* filename)
 			int illum;
 			unsigned int texture;
 			bool ismat=false;   //do we already have a material read in to these variables?
-			strcpy(filename,"\0");  //set filename to nullbyte character
+			strcpy(filename,"\0");  //set filename to null byte character
 			for(int i=0;i<tmp.size();i++) //go through all lines of the mtllib file
 			{
 				if(tmp[i].c_str()[0]=='#')  //we don't care about comments
 					continue;
 				if(tmp[i].c_str()[0]=='n' && tmp[i].c_str()[1]=='e' && tmp[i].c_str()[2]=='w')  //new material
 				{
-					cout<<tmp[i].c_str()[0]<<endl;
+					
 					if(ismat)   //if we have a material
 					{
 						if(strcmp(filename,"\0")!=0)    //if we have a texture
@@ -236,6 +236,10 @@ int objloader::load(const char* filename)
 			}
 		}else if(coord[i]->c_str()[0]=='v' && coord[i]->c_str()[1]=='t')    //back to the obj file, texture coorinate
 		{
+
+			//cout<<"here i am"<<(*coord[i])[0]<<endl;
+			//cout<<"here i am"<<coord[i]->c_str()[0]<<endl;
+
 			float u,v;
 			sscanf(coord[i]->c_str(),"vt %f %f",&u,&v); //read the uv coordinate
 			texturecoordinate.push_back(new texcoord(u,1-v));   //I push back 1-v instead of normal v, because obj file use the upper left corner as 0,0 coorinate
@@ -249,6 +253,9 @@ int objloader::load(const char* filename)
 		ismaterial=true;
 	std::cout << vertex.size() << " " << normals.size() << " " << faces.size() << " " << materials.size() << std::endl;     //test purposes
 	//draw
+
+	if(isvertexnormal)
+		smoothnormals();
 	int num;
 	num=glGenLists(1);  //I generate a unique identifier for the list
 	glNewList(num,GL_COMPILE);
@@ -282,20 +289,32 @@ int objloader::load(const char* filename)
 			if(istexture && materials[faces[i]->mat]->texture!=-1)  //if there are textures
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[0]-1]->u,texturecoordinate[faces[i]->texcoord[0]-1]->v);  //set the texture coorinate
 
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[0]-1]->x,vertexnormals[faces[i]->faces[0]-1]->y,vertexnormals[faces[i]->faces[0]-1]->z);
+
 			glVertex3f(vertex[faces[i]->faces[0]-1]->x,vertex[faces[i]->faces[0]-1]->y,vertex[faces[i]->faces[0]-1]->z);
 
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[1]-1]->u,texturecoordinate[faces[i]->texcoord[1]-1]->v);
 
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[1]-1]->x,vertexnormals[faces[i]->faces[1]-1]->y,vertexnormals[faces[i]->faces[1]-1]->z);
+
 			glVertex3f(vertex[faces[i]->faces[1]-1]->x,vertex[faces[i]->faces[1]-1]->y,vertex[faces[i]->faces[1]-1]->z);
 
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[2]-1]->u,texturecoordinate[faces[i]->texcoord[2]-1]->v);
+            
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[2]-1]->x,vertexnormals[faces[i]->faces[2]-1]->y,vertexnormals[faces[i]->faces[2]-1]->z);
 
 			glVertex3f(vertex[faces[i]->faces[2]-1]->x,vertex[faces[i]->faces[2]-1]->y,vertex[faces[i]->faces[2]-1]->z);
 
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[3]-1]->u,texturecoordinate[faces[i]->texcoord[3]-1]->v);
+
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[3]-1]->x,vertexnormals[faces[i]->faces[3]-1]->y,vertexnormals[faces[i]->faces[3]-1]->z);
 
 			glVertex3f(vertex[faces[i]->faces[3]-1]->x,vertex[faces[i]->faces[3]-1]->y,vertex[faces[i]->faces[3]-1]->z);
 			glEnd();
@@ -307,17 +326,25 @@ int objloader::load(const char* filename)
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[0]-1]->u,texturecoordinate[faces[i]->texcoord[0]-1]->v);
 
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[0]-1]->x,vertexnormals[faces[i]->faces[0]-1]->y,vertexnormals[faces[i]->faces[0]-1]->z);
 
 			glVertex3f(vertex[faces[i]->faces[0]-1]->x,vertex[faces[i]->faces[0]-1]->y,vertex[faces[i]->faces[0]-1]->z);
 
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[1]-1]->u,texturecoordinate[faces[i]->texcoord[1]-1]->v);
 
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[1]-1]->x,vertexnormals[faces[i]->faces[1]-1]->y,vertexnormals[faces[i]->faces[1]-1]->z);
+
 			glVertex3f(vertex[faces[i]->faces[1]-1]->x,vertex[faces[i]->faces[1]-1]->y,vertex[faces[i]->faces[1]-1]->z);
 
 
 			if(istexture && materials[faces[i]->mat]->texture!=-1)
 				glTexCoord2f(texturecoordinate[faces[i]->texcoord[2]-1]->u,texturecoordinate[faces[i]->texcoord[2]-1]->v);
+
+			if(isvertexnormal)
+				glNormal3f(vertexnormals[faces[i]->faces[2]-1]->x,vertexnormals[faces[i]->faces[2]-1]->y,vertexnormals[faces[i]->faces[2]-1]->z);
 
 			glVertex3f(vertex[faces[i]->faces[2]-1]->x,vertex[faces[i]->faces[2]-1]->y,vertex[faces[i]->faces[2]-1]->z);
 			glEnd();
@@ -344,13 +371,20 @@ void objloader::clean()
 		delete materials[i];
 	for(int i=0;i<texturecoordinate.size();i++)
 		delete texturecoordinate[i];
+	for(int i=0;i<vertexnormals.size();i++)
+		delete vertexnormals[i];
 	//and all elements from the vector
+
+	
 	coord.clear();
 	faces.clear();
 	normals.clear();
 	vertex.clear();
 	materials.clear();
 	texturecoordinate.clear();
+	vertexnormals.clear();
+
+	
 }
 
 objloader::~objloader()
@@ -389,4 +423,38 @@ objloader::objloader()
 	ismaterial=false;
 	isnormals=false;
 	istexture=false;
+	isvertexnormal=true;
+}
+
+void objloader::smoothnormals()
+{
+	for(int i=1;i<vertex.size()+1;i++)
+	{
+		float vecX=0.0,vecY=0.0,vecZ=0.0;
+		int num=0;
+		for(int j=0;j<faces.size();j++)
+		{
+			if(faces[j]->faces[0]==i || faces[j]->faces[1]==i || faces[j]->faces[2]==i || faces[j]->faces[3]==i)
+			{
+				vecX+=normals[faces[j]->facenum-1]->x;
+				vecY+=normals[faces[j]->facenum-1]->y;
+				vecZ+=normals[faces[j]->facenum-1]->z;
+				num++;
+			}
+		}
+		if(num)
+		{
+			vecX/=num;
+			vecY/=num;
+			vecZ/=num;
+		}
+		float d=sqrt(vecX*vecX+vecY*vecY+vecZ*vecZ);
+		if(d)
+		{
+			vecX/=d;
+			vecY/=d;
+			vecZ/=d;
+		}
+		vertexnormals.push_back(new coordinate(vecX,vecY,vecZ));
+	}
 }
